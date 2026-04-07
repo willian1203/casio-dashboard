@@ -412,8 +412,13 @@
       if (xhr.status === 200) {
         try {
           var d = JSON.parse(xhr.responseText);
-          // Safely read the rate, fallback to null
-          var rate = (d && d.rate !== undefined) ? parseFloat(d.rate) : null;
+  
+          // Safely get the rate: either from `rate` or `BRL`
+          var rate = null;
+          if (d) {
+            if (d.rate !== undefined) rate = parseFloat(d.rate);
+            else if (d.BRL !== undefined) rate = parseFloat(d.BRL);
+          }
   
           if (rate === null || isNaN(rate)) {
             el.innerHTML = '<div class="msg" style="color:' + c.segDim + '">NO DATA_</div>';
@@ -464,6 +469,7 @@
   
         } catch (e) {
           el.innerHTML = '<div class="msg" style="color:' + c.segDim + '">NO DATA_</div>';
+          console.error('USD/BRL parse error', e);
         }
       } else {
         el.innerHTML = '<div class="msg" style="color:' + c.segDim + '">NO DATA_</div>';
