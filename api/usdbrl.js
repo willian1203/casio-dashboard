@@ -1,20 +1,21 @@
-// Proxy USD/BRL — avoids TLS issues on old devices (same idea as weather.js)
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-store');
 
-  var url = 'https://api.frankfurter.app/latest?from=USD&to=BRL';
+  // AwesomeAPI endpoint for latest USD → BRL
+  const url = 'https://economia.awesomeapi.com.br/json/last/USD-BRL';
 
   try {
-    var response = await fetch(url);
+    const response = await fetch(url);
     if (!response.ok) {
       return res.status(502).json({ error: 'exchange API error: ' + response.status });
     }
 
-    var data = await response.json();
+    const data = await response.json();
 
+    // AwesomeAPI returns USD_BRL object with "bid" as the current rate
     res.status(200).json({
-      rate: data.rates.BRL
+      rate: parseFloat(data.USDBRL.bid) // convert string to number
     });
 
   } catch (e) {
