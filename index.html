@@ -373,9 +373,45 @@
             '</div>'+
             '<div class="w-desc" style="color:'+c.segDim+'">'+(WMO[cw.weathercode]||'--')+'</div>'+
             '<div class="w-meta" style="color:'+c.label+'">FEEL <b style="color:'+c.segOn+'">'+sens+'°</b> &nbsp; HUM <b style="color:'+c.segOn+'">'+hum+'%</b><br>WIND <b style="color:'+c.segOn+'">'+wind+' KM/H</b></div>';
+            '<div id="usdbrl" style="margin-top:0.8vh;font-size:1vw;letter-spacing:0.12em;"></div>';
+          fetchUSDBRL();
         }catch(e){el.innerHTML='<div class="msg" style="color:'+c.segDim+'">NO DATA_</div>';}
       }else{el.innerHTML='<div class="msg" style="color:'+c.segDim+'">NO DATA_</div>';}
     };
+    xhr.send();
+  }
+  
+  // ── USD BRL ────────────────────────────────────────────────
+
+  function fetchUSDBRL() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/usdbrl', true);
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState !== 4) return;
+
+      var el = document.getElementById('usdbrl');
+      var c = window._colors || THEMES.green;
+
+      if (xhr.status === 200) {
+        try {
+          var d = JSON.parse(xhr.responseText);
+          var rate = d.rate;
+
+          el.innerHTML =
+            'USD/BRL <b style="color:' + c.segOn + '">' +
+            rate.toFixed(2) +
+            '</b>';
+        } catch (e) {
+          el.innerHTML = 'USD/BRL --';
+        }
+      } else {
+        el.innerHTML = 'USD/BRL --';
+      }
+
+      el.style.color = c.label;
+    };
+
     xhr.send();
   }
 
@@ -437,6 +473,8 @@
   setInterval(updateClock,1000);
   fetchWeather();
   setInterval(fetchWeather,10*60*1000);
+  fetchUSDBRL();
+  setInterval(fetchUSDBRL, 60000);
   fetchAgenda();
   setInterval(fetchAgenda,15*60*1000);
   document.addEventListener('touchstart',function(){},false);
