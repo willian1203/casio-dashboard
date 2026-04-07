@@ -1,21 +1,26 @@
+// Proxy USD/BRL — avoids TLS issues on old devices
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-store');
 
-  // AwesomeAPI endpoint for latest USD → BRL
   const url = 'https://economia.awesomeapi.com.br/json/last/USD-BRL';
 
   try {
     const response = await fetch(url);
+
+    // Treat 304 (Not Modified) as valid — no body to parse
+    if (response.status === 304) {
+      return res.status(200).json({ message: 'Data not modified, use cached value' });
+    }
+
     if (!response.ok) {
       return res.status(502).json({ error: 'exchange API error: ' + response.status });
     }
 
     const data = await response.json();
 
-    // AwesomeAPI returns USD_BRL object with "bid" as the current rate
     res.status(200).json({
-      rate: parseFloat(data.USDBRL.bid) // convert string to number
+      rate: parseFloat(data.USDBRL.bid) // current USD → BRL
     });
 
   } catch (e) {
