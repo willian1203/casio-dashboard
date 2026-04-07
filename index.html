@@ -412,10 +412,12 @@
       if (xhr.status === 200) {
         try {
           var d = JSON.parse(xhr.responseText);
-          var rate = d?.rates?.BRL; // optional chaining avoids undefined error
+          // Safely read the rate, fallback to null
+          var rate = (d && d.rate !== undefined) ? parseFloat(d.rate) : null;
   
-          if (typeof rate !== 'number') {
-            throw new Error('Rate undefined');
+          if (rate === null || isNaN(rate)) {
+            el.innerHTML = '<div class="msg" style="color:' + c.segDim + '">NO DATA_</div>';
+            return;
           }
   
           var trend = '';
@@ -425,7 +427,6 @@
   
           if (lastRate !== null) {
             var diff = rate - lastRate;
-  
             if (diff > 0) {
               trend = '▲';
               trendColor = c.segOn;
@@ -459,10 +460,9 @@
   
           // flash effect
           el.style.opacity = '0.3';
-          setTimeout(function(){ el.style.opacity='1'; }, 120);
+          setTimeout(function () { el.style.opacity = '1'; }, 120);
   
         } catch (e) {
-          console.warn('USD/BRL fetch error:', e);
           el.innerHTML = '<div class="msg" style="color:' + c.segDim + '">NO DATA_</div>';
         }
       } else {
