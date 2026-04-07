@@ -412,7 +412,11 @@
       if (xhr.status === 200) {
         try {
           var d = JSON.parse(xhr.responseText);
-          var rate = d.rate;
+          var rate = d?.rates?.BRL; // optional chaining avoids undefined error
+  
+          if (typeof rate !== 'number') {
+            throw new Error('Rate undefined');
+          }
   
           var trend = '';
           var trendColor = c.segDim;
@@ -441,16 +445,16 @@
           lastRate = rate;
   
           el.innerHTML =
-            '<div class="temp-wrap">'+
-              '<div class="temp-ghost" style="color:'+c.segOff+'">88.88</div>'+
-              '<div class="temp-real" style="color:'+c.segOn+';text-shadow:0 0 12px '+c.glow+'">'+
+            '<div class="temp-wrap">' +
+              '<div class="temp-ghost" style="color:' + c.segOff + '">88.88</div>' +
+              '<div class="temp-real" style="color:' + c.segOn + ';text-shadow:0 0 12px ' + c.glow + '">' +
                 rate.toFixed(2) +
-                ' <span style="color:'+trendColor+'">'+trend+'</span>'+
-              '</div>'+
-            '</div>'+
-            '<div class="w-desc" style="color:'+c.segDim+'">USD → BRL</div>'+
-            '<div class="w-meta" style="color:'+c.label+'">'+
-              'Δ <b style="color:'+deltaColor+'">'+delta+'</b>'+
+                ' <span style="color:' + trendColor + '">' + trend + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="w-desc" style="color:' + c.segDim + '">USD → BRL</div>' +
+            '<div class="w-meta" style="color:' + c.label + '">' +
+              'Δ <b style="color:' + deltaColor + '">' + delta + '</b>' +
             '</div>';
   
           // flash effect
@@ -458,10 +462,11 @@
           setTimeout(function(){ el.style.opacity='1'; }, 120);
   
         } catch (e) {
-          el.innerHTML = '<div class="msg">NO DATA_</div>';
+          console.warn('USD/BRL fetch error:', e);
+          el.innerHTML = '<div class="msg" style="color:' + c.segDim + '">NO DATA_</div>';
         }
       } else {
-        el.innerHTML = '<div class="msg">NO DATA_</div>';
+        el.innerHTML = '<div class="msg" style="color:' + c.segDim + '">NO DATA_</div>';
       }
     };
   
