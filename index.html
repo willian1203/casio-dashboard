@@ -12,6 +12,14 @@
       src: url('https://cdn.jsdelivr.net/npm/dseg@0.46.0/fonts/DSEG7-Classic/DSEG7Classic-Regular.woff2') format('woff2'),
            url('https://cdn.jsdelivr.net/npm/dseg@0.46.0/fonts/DSEG7-Classic/DSEG7Classic-Regular.woff') format('woff');
     }
+    
+    #usdbrl-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <!-- Estilos de tema inyectados por JS -->
@@ -107,6 +115,7 @@
       padding:1.5vh 2.5vw; overflow:hidden;
     }
     .panel-left { border-right-width:1px; border-right-style:solid; }
+    .panel-middle { border-right-width: 1px; border-right-style: solid; }
     .panel-label {
       font-size:0.9vw; letter-spacing:0.3em; text-transform:uppercase;
       margin-bottom:1vh;
@@ -184,6 +193,12 @@
     <div class="panel panel-left" id="panel-left">
       <div class="panel-label" id="panel-label-left">&#9650; WEATHER / BUE</div>
       <div id="weather-section"><div class="msg" id="w-msg">LOADING_</div></div>
+    </div>
+    <div class="panel panel-middle" id="panel-middle">
+      <div class="panel-label">&#9670; USD/BRL</div>
+      <div id="usdbrl-section">
+        <div class="msg">LOADING_</div>
+      </div>
     </div>
     <div class="panel" id="panel-right">
       <div class="panel-label" id="panel-label-right">&#9632; SCHEDULE &#8212; NEXT 7 DAYS</div>
@@ -276,6 +291,7 @@
     if (df) df.style.color = c.segOn;
     // Panels
     document.getElementById('panel-left').style.borderRightColor = c.segOff;
+    document.getElementById('panel-middle').style.borderRightColor = c.segOff;
     colorEls('panel-label', c.label);
     document.getElementById('panel-label-left').style.borderBottomColor = c.segOff;
     document.getElementById('panel-label-right').style.borderBottomColor = c.segOff;
@@ -373,8 +389,6 @@
             '</div>'+
             '<div class="w-desc" style="color:'+c.segDim+'">'+(WMO[cw.weathercode]||'--')+'</div>'+
             '<div class="w-meta" style="color:'+c.label+'">FEEL <b style="color:'+c.segOn+'">'+sens+'°</b> &nbsp; HUM <b style="color:'+c.segOn+'">'+hum+'%</b><br>WIND <b style="color:'+c.segOn+'">'+wind+' KM/H</b></div>';
-            '<div id="usdbrl" style="margin-top:0.8vh;font-size:1vw;letter-spacing:0.12em;"></div>';
-          fetchUSDBRL();
         }catch(e){el.innerHTML='<div class="msg" style="color:'+c.segDim+'">NO DATA_</div>';}
       }else{el.innerHTML='<div class="msg" style="color:'+c.segDim+'">NO DATA_</div>';}
     };
@@ -382,36 +396,75 @@
   }
   
   // ── USD BRL ────────────────────────────────────────────────
-
+  var lastRate = null;
   function fetchUSDBRL() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', '/api/usdbrl', true);
-
+  
     xhr.onreadystatechange = function () {
       if (xhr.readyState !== 4) return;
-
-      var el = document.getElementById('usdbrl');
+  
+      var el = document.getElementById('usdbrl-section');
+      if (!el) return;
+  
       var c = window._colors || THEMES.green;
-
+  
       if (xhr.status === 200) {
         try {
           var d = JSON.parse(xhr.responseText);
           var rate = d.rate;
-
+  
+          var trend = '';
+          var trendColor = c.segDim;
+          var delta = '';
+          var deltaColor = c.segDim;
+  
+          if (lastRate !== null) {
+            var diff = rate - lastRate;
+  
+            if (diff > 0) {
+              trend = '▲';
+              trendColor = c.segOn;
+              delta = '+' + diff.toFixed(2);
+              deltaColor = c.segOn;
+            } else if (diff < 0) {
+              trend = '▼';
+              trendColor = c.segDim;
+              delta = diff.toFixed(2);
+              deltaColor = c.segDim;
+            } else {
+              trend = '■';
+              delta = '0.00';
+            }
+          }
+  
+          lastRate = rate;
+  
           el.innerHTML =
-            'USD/BRL <b style="color:' + c.segOn + '">' +
-            rate.toFixed(2) +
-            '</b>';
+            '<div class="temp-wrap">'+
+              '<div class="temp-ghost" style="color:'+c.segOff+'">88.88</div>'+
+              '<div class="temp-real" style="color:'+c.segOn+';text-shadow:0 0 12px '+c.glow+'">'+
+                rate.toFixed(2) +
+                ' <span style="color:'+trendColor+'">'+trend+'</span>'+
+              '</div>'+
+            '</div>'+
+            '<div class="w-desc" style="color:'+c.segDim+'">USD → BRL</div>'+
+            '<div class="w-meta" style="color:'+c.label+'">'+
+              'Δ <b style="color:'+deltaColor+'">'+delta+'</b>'+
+            '</div>';
+  
+          // flash effect
+          el.style.opacity = '0.3';
+          setTimeout(function(){ el.style.opacity='1'; }, 120);
+  
         } catch (e) {
-          el.innerHTML = 'USD/BRL --';
+          el.innerHTML = '<div class="msg">NO DATA_</div>';
         }
       } else {
-        el.innerHTML = 'USD/BRL --';
+        el.innerHTML = '<div class="msg">NO DATA_</div>';
       }
-
-      el.style.color = c.label;
     };
-
+  
     xhr.send();
   }
 
