@@ -6,7 +6,12 @@ module.exports = async function handler(req, res) {
   const url = 'https://economia.awesomeapi.com.br/json/last/USD-BRL';
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
+                      '(KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+      }
+    });
 
     // Treat 304 (Not Modified) as valid — no body to parse
     if (response.status === 304) {
