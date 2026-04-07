@@ -3,7 +3,7 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-store');
 
-  var url = 'https://api.exchangerate.host/latest?base=USD&symbols=BRL';
+  var url = 'https://api.frankfurter.app/latest?from=USD&to=BRL';
 
   try {
     var response = await fetch(url);
